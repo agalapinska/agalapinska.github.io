@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Wynagrodzeń 2026 — Useme vs JDG</title>
+<style>
+:root {
+  --u: #6366F1; --u-light: #EEF2FF; --u-dark: #4338CA;
+  --j: #10B981; --j-light: #ECFDF5; --j-dark: #047857;
+  --red: #EF4444; --amber: #F59E0B; --slate: #64748B;
+  --bg: #F1F5F9; --card: #FFFFFF; --text: #0F172A; --muted: #64748B;
+  --border: #E2E8F0; --radius: 14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── HEADER ── */
+.header{background:linear-gradient(135deg,#4F46E5 0%,#7C3AED 50%,#2563EB 100%);color:#fff;padding:32px 20px 28px;text-align:center;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.header h1{font-size:clamp(1.4rem,4vw,2rem);font-weight:800;letter-spacing:-0.02em;position:relative}
+.header p{font-size:0.88rem;opacity:.8;margin-top:6px;position:relative}
+.badge-year{display:inline-block;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:2px 10px;font-size:.75rem;font-weight:700;margin-bottom:10px}
+
+/* ── LAYOUT ── */
+.wrap{max-width:1300px;margin:0 auto;padding:24px 16px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+@media(max-width:800px){.two-col{grid-template-columns:1fr}}
+
+/* ── CARDS ── */
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden}
+.card-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border)}
+.card-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0}
+.card-body{padding:20px}
+.card-title{font-size:.95rem;font-weight:700}
+.card-sub{font-size:.75rem;color:var(--muted);margin-top:2px}
+
+/* ── FORMS ── */
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.inp-wrap{position:relative}
+.inp-wrap input,.inp-wrap select,input[type=number],select{width:100%;padding:10px 44px 10px 12px;border:1px solid var(--border);border-radius:9px;font-size:.92rem;color:var(--text);background:var(--bg);transition:border .15s,box-shadow .15s;-moz-appearance:textfield}
+.inp-wrap input:focus,.inp-wrap select:focus,input:focus,select:focus{outline:none;border-color:var(--u);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+.inp-suffix{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:.8rem;color:var(--muted);pointer-events:none;font-weight:600}
+.note{font-size:.72rem;color:var(--muted);margin-top:4px;font-style:italic}
+
+/* ── SECTIONS ── */
+.section{background:#F8FAFC;border-radius:10px;padding:14px 16px;margin-bottom:14px;border:1px solid var(--border)}
+.section-title{font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+/* ── RESULTS ── */
+.r-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dotted var(--border);font-size:.88rem}
+.r-row:last-child{border:none}
+.r-label{color:var(--muted);flex:1}
+.r-val{font-weight:600;font-family:'SF Mono',monospace;font-size:.88rem}
+.r-val.neg{color:var(--red)}
+.r-val.pos{color:var(--j)}
+.r-val.neutral{color:var(--text)}
+.r-divider{border:none;border-top:2px solid var(--border);margin:10px 0}
+
+.result-box{border-radius:12px;padding:18px;text-align:center;margin-top:14px}
+.result-box.u-box{background:linear-gradient(135deg,#F5F3FF,#EEF2FF);border:2px solid var(--u)}
+.result-box.j-box{background:linear-gradient(135deg,#F0FDF4,#ECFDF5);border:2px solid var(--j)}
+.result-box .amount{font-size:2rem;font-weight:900;letter-spacing:-.03em;line-height:1}
+.result-box.u-box .amount{color:var(--u)}
+.result-box.j-box .amount{color:var(--j)}
+.result-box .rlabel{font-size:.75rem;color:var(--muted);margin-top:6px}
+.result-box .eff-rate{font-size:.8rem;font-weight:700;margin-top:6px;opacity:.8}
+
+/* ── ANNUAL PANEL ── */
+.annual-panel{background:#F8FAFC;border-radius:10px;padding:14px;margin-top:12px;display:none;border:1px solid var(--border)}
+.annual-row{display:flex;justify-content:space-between;font-size:.82rem;color:var(--muted);padding:4px 0}
+.annual-total{font-size:.95rem;font-weight:800;color:var(--text);border-top:2px solid var(--border);padding-top:8px;margin-top:6px;display:flex;justify-content:space-between}
+
+/* ── TOGGLES ── */
+.toggle-wrap{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.toggle-label{font-size:.85rem;font-weight:600}
+.sw{width:44px;height:24px;background:var(--border);border-radius:24px;position:relative;cursor:pointer;flex-shrink:0;transition:background .2s}
+.sw.on{background:var(--j)}
+.sw::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw.on::after{transform:translateX(20px)}
+.check-label{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--muted)}
+.check-label input{width:16px;height:16px;accent-color:var(--j);cursor:pointer}
+
+/* ── COMPARISON ── */
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+@media(max-width:600px){.cmp-grid{grid-template-columns:1fr}}
+.cmp-col{}
+.cmp-name{font-weight:800;font-size:.95rem;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.bar-bg{background:var(--border);border-radius:999px;height:14px;overflow:hidden}
+.bar-fill{height:100%;border-radius:999px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.cmp-amount{font-size:1.6rem;font-weight:900;letter-spacing:-.03em;margin-top:4px}
+
+.winner{background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:2px solid #F59E0B;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px}
+.winner-ico{font-size:2rem}
+.winner h3{font-size:1rem;font-weight:800;color:#92400E}
+.winner p{font-size:.82rem;color:#92400E;margin-top:3px}
+
+.cmp-table{width:100%;font-size:.85rem;border-collapse:collapse}
+.cmp-table th{text-align:left;padding:10px 8px;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid var(--border)}
+.cmp-table td{padding:10px 8px;border-bottom:1px solid var(--border)}
+.cmp-table tr.highlight td{background:#FAFAFA;font-weight:800}
+.cmp-table .u-col{text-align:right;color:var(--u);font-weight:700}
+.cmp-table .j-col{text-align:right;color:var(--j);font-weight:700}
+.cmp-table .d-col{text-align:right;font-weight:700}
+
+/* ── TOP INPUTS ── */
+.top-card{margin-bottom:20px}
+.top-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:700px){.top-grid{grid-template-columns:1fr}}
+
+/* ── USEME PLAN TABS ── */
+.plan-tabs{display:flex;gap:8px;margin-bottom:14px}
+.plan-tab{flex:1;padding:10px 8px;border-radius:9px;border:2px solid var(--border);cursor:pointer;text-align:center;font-size:.82rem;font-weight:700;transition:all .15s;background:var(--bg)}
+.plan-tab.active-u{background:var(--u);color:#fff;border-color:var(--u)}
+
+/* ── INFO BOX ── */
+.info{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:9px;padding:12px 14px;font-size:.78rem;color:#1E40AF;margin-bottom:14px;line-height:1.5}
+.info strong{display:block;margin-bottom:3px}
+
+/* ── FOOTER ── */
+footer{text-align:center;padding:24px;color:var(--muted);font-size:.75rem;line-height:1.8}
+footer a{color:var(--u);text-decoration:none}
+
+/* ── UTIL ── */
+.flex-sb{display:flex;justify-content:space-between;align-items:center}
+.mt8{margin-top:8px}
+.bold{font-weight:700}
+.text-u{color:var(--u)}
+.text-j{color:var(--j)}
+.text-red{color:var(--red)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge-year">🇵🇱 Polska 2026</div>
+  <h1>💰 Kalkulator Wynagrodzeń Freelancera</h1>
+  <p>Porównaj Useme vs JDG (Zasady Ogólne) — aktualne stawki ZUS i podatkowe 2026</p>
+</div>
+
+<div class="wrap">
+
+<!-- TOP INPUTS -->
+<div class="card top-card">
+  <div class="card-head">
+    <div class="card-icon" style="background:#FFF7ED">⚙️</div>
+    <div><div class="card-title">Parametry wspólne</div><div class="card-sub">Kwota faktury i widok wyników</div></div>
+  </div>
+  <div class="card-body">
+    <div class="top-grid">
+      <div class="fg">
+        <label>Kwota faktury miesięcznej (co płaci klient)</label>
+        <div class="inp-wrap"><input type="number" id="gross" value="15000" min="0" step="100" oninput="calc()"><span class="inp-suffix">PLN</span></div>
+        <p class="note">Wartość na fakturze Useme lub fakturze JDG</p>
+      </div>
+      <div class="fg">
+        <label>Kwota wolna od podatku (roczna)</label>
+        <div class="inp-wrap"><input type="number" id="kwotaWolna" value="30000" min="0" oninput="calc()"><span class="inp-suffix">PLN</span></div>
+        <p class="note">Standardowo 30 000 PLN/rok (2 500 PLN/mies.)</p>
+      </div>
+      <div class="fg">
+        <label>Pokaż widok roczny</label>
+        <div class="mt8 toggle-wrap">
+          <span class="toggle-label">Roczne podsumowanie</span>
+          <div class="sw" id="annualSw" onclick="toggleAnnual()"></div>
+        </div>
+        <p class="note">Wyniki × 12 miesięcy z właściwym progiem podatkowym</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="two-col">
+
+<!-- ═══════════════ USEME ═══════════════ -->
+<div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-head" style="border-color:#C7D2FE">
+      <div class="card-icon" style="background:var(--u-light)">🟣</div>
+      <div>
+        <div class="card-title text-u">Useme</div>
+        <div class="card-sub">Platforma freelancerska · 50% KUP · bez ZUS</div>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <div class="section-title">📋 Plan Useme</div>
+      <div class="plan-tabs">
+        <div class="plan-tab active-u" id="tab-std" onclick="setUsemePlan('standard')">
+          Standard<br><small style="font-weight:400;opacity:.8">7,8% (max 349 zł)</small>
+        </div>
+        <div class="plan-tab" id="tab-plus" onclick="setUsemePlan('plus')">
+          Useme Plus<br><small style="font-weight:400;opacity:.8">599 zł/mies. + NFZ</small>
+        </div>
+      </div>
+
+      <div class="info" id="useme-info">
+        <strong>ℹ️ Useme Standard</strong>
+        Prowizja 7,8% od wartości faktury. Minimalna opłata: 29 zł, maksymalna: 349 zł/mies. Po przekroczeniu limitu 349 zł — pozostałe faktury w miesiącu <strong>bezpłatnie</strong>. Brak ZUS, brak ubezpieczenia zdrowotnego.
+      </div>
+
+      <div class="section">
+        <div class="section-title">📝 Opis usługi na fakturze</div>
+        <div class="fg">
+          <label>Rodzaj usługi</label>
+          <div class="inp-wrap">
+            <input type="text" id="usemeDesc" placeholder="np. Usługi programistyczne / Projekt graficzny" style="padding-right:12px">
+          </div>
+          <p class="note">IT, oprogramowanie, design → uprawniają do 50% KUP</p>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">💸 Parametry podatkowe Useme</div>
+        <div class="r-row">
+          <span class="r-label">Koszty uzysk. przychodu (KUP)</span>
+          <span class="r-val neutral">50% przychodu</span>
+        </div>
+        <div class="r-row">
+          <span class="r-label">I próg podatkowy (do 120 000 PLN/rok)</span>
+          <span class="r-val neutral">12%</span>
+        </div>
+        <div class="r-row">
+          <span class="r-label">II próg podatkowy (pow. 120 000 PLN/rok)</span>
+          <span class="r-val neutral">32%</span>
+        </div>
+        <div class="r-row">
+          <span class="r-label">ZUS / składka zdrowotna</span>
+          <span class="r-val pos">Brak</span>
+        </div>
+        <p class="note mt8">Useme działa jak umowa o dzieło — jesteś wynagradzany przez platformę</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- USEME RESULTS -->
+  <div class="card">
+    <div class="card-head" style="border-color:#C7D2FE">
+      <div class="card-icon" style="background:var(--u-light)">📊</div>
+      <div><div class="card-title text-u">Wynik — Useme</div><div class="card-sub">Miesięczne podsumowanie</div></div>
+    </div>
+    <div class="card-body">
+      <div class="r-row"><span class="r-label">Kwota faktury (co płaci klient)</span><span class="r-val neutral" id="u-gross">—</span></div>
+      <div class="r-row"><span class="r-label">Prowizja / opłata Useme</span><span class="r-val neg" id="u-fee">—</span></div>
+      <div class="r-row"><span class="r-label">Przychód dla Ciebie (od Useme)</span><span class="r-val neutral" id="u-net">—</span></div>
+      <hr class="r-divider">
+      <div class="r-row"><span class="r-label">50% KUP (koszty uzysk. przychodu)</span><span class="r-val neg" id="u-kup">—</span></div>
+      <div class="r-row"><span class="r-label">Podstawa opodatkowania</span><span class="r-val neutral" id="u-taxbase">—</span></div>
+      <div class="r-row"><span class="r-label">Podatek dochodowy (zaliczka)</span><span class="r-val neg" id="u-tax">—</span></div>
+      <hr class="r-divider">
+      <div class="r-row"><span class="r-label bold">ZUS / Składka zdrowotna</span><span class="r-val pos">0 PLN</span></div>
+
+      <div class="result-box u-box">
+        <div class="amount" id="u-takehome">—</div>
+        <div class="rlabel">💰 Na rękę miesięcznie</div>
+        <div class="eff-rate text-u" id="u-effrate">—</div>
+      </div>
+
+      <div class="annual-panel" id="u-annual">
+        <div class="section-title">📅 Rocznie (×12)</div>
+        <div class="annual-row"><span>Przychód brutto od klientów</span><span id="ua-gross">—</span></div>
+        <div class="annual-row"><span>Łączne opłaty Useme</span><span id="ua-fee">—</span></div>
+        <div class="annual-row"><span>Podstawa opodatkowania (roczna)</span><span id="ua-taxbase">—</span></div>
+        <div class="annual-row"><span>Podatek dochodowy (roczny)</span><span id="ua-tax">—</span></div>
+        <div class="annual-total"><span>💰 Na rękę rocznie</span><span class="text-u" id="ua-takehome">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ JDG ═══════════════ -->
+<div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-head" style="border-color:#A7F3D0">
+      <div class="card-icon" style="background:var(--j-light)">🟢</div>
+      <div>
+        <div class="card-title text-j">JDG — Zasady Ogólne</div>
+        <div class="card-sub">Jednoosobowa DG · IT / Oprogramowanie / Design</div>
+      </div>
+    </div>
+    <div class="card-body">
+
+      <div class="section">
+        <div class="section-title">🧾 Koszty uzyskania przychodu (faktury kosztowe)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="fg">
+            <label>Sprzęt / Laptop / Telefon</label>
+            <div class="inp-wrap"><input type="number" id="c1" value="500" min="0" oninput="calc()"><span class="inp-suffix">PLN</span></div>
+          </div>
+          <div class="fg">
+            <label>Oprogramowanie / Licencje</label>
+            <div class="inp-wrap"><input type="number" id="c2" value="200" min="0" oninput="calc()"><span class="inp-suffix">PLN</span></div>
+          </div>
+          <div class="fg">
+            <label>Biuro / Home office</label>
+            <div class="inp-wrap"><input type="number" id="c3" value="300" min="0" oninput="calc()"><span class="inp-suffix">PLN</span></div>
+          </div>
+          <div class="fg">
+            <label>Inne (szkolenia, marketing)</label>
+            <div class="inp-wrap"><input type="number" id="c4" value="200" min="0" oninput="calc()"><span class="inp-suffix">PLN</span></div>
+          </div>
+        </div>
+        <div class="flex-sb" style="font-size:.85rem;padding-top:10px;border-top:1px solid var(--border);margin-top:4px">
+          <span class="bold">Łączne koszty:</span>
+          <span class="bold text-j" id="j-costs-total">—</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">🏛️ ZUS Społeczny 2026 — Pełny (Duży) ZUS</div>
+        <p class="note" style="margin-bottom:12px">Podstawa wymiaru: 5 652 PLN (60% × 9 420 PLN). Możesz edytować wartości.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="fg">
+            <label>Emerytalna (19,52%)</label>
+            <div class="inp-wrap"><input type="number" id="z-em" value="1103.24" step="0.01" min="0" oninput="calc()"><span class="inp-suffix">PLN</span></div>
+          </div>
+          <div class="fg">
+            <label>Rentowa (8%)</label>
+            <div class="inp-wrap"><input type="number" id="z-re" value="452.16" step="0.01" min="0" oninput="calc()"><span class="inp-suffix">PLN</span></div>
+          </div>
+          <div class="fg">
+            <label>Wypadkowa (1,67%)</label>
+            <div class="inp-wrap"><input type="number" id="z-wy" value="94.39" step="0.01" min="0" oninput="calc()"><span class="inp-suffix">PLN</span></div>
+          </div>
+          <div class="fg">
+            <label>Fundusz Pracy (2,45%)</label>
+            <div class="inp-wrap"><input type="number" id="z-fp" value="138.47" step="0.01" min="0" oninput="calc()"><span class="inp-suffix">PLN</span></div>
+          </div>
+        </div>
+        <div class="mt8">
+          <label class="check-label">
+            <input type="checkbox" id="z-ch" onchange="toggleChorobowa()">
+            Chorobowa (2,45%) — dobrowolna: 138,47 PLN
+          </label>
+          <div id="z-ch-row" style="display:none;margin-top:8px" class="fg">
+            <div class="inp-wrap"><input type="number" id="z-cho" value="138.47" step="0.01" min="0" oninput="calc()"><span class="inp-suffix">PLN</span></div>
+          </div>
+        </div>
+        <div class="flex-sb" style="font-size:.85rem;padding-top:10px;border-top:1px solid var(--border);margin-top:12px">
+          <span class="bold">Łącznie ZUS społeczny:</span>
+          <span class="bold text-red" id="j-zus-total">—</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">🏥 Składka zdrowotna 2026</div>
+        <div class="r-row"><span class="r-label">Stawka (zasady ogólne)</span><span class="r-val neutral">9% dochodu</span></div>
+        <div class="r-row"><span class="r-label">Minimalna składka (9% × 4 806 PLN)</span><span class="r-val neutral">432,54 PLN</span></div>
+        <div class="r-row"><span class="r-label">Odliczenie od podatku?</span><span class="r-val neg">NIE</span></div>
+        <p class="note mt8">Składka zdrowotna NIE jest odliczana od podstawy opodatkowania przy zasadach ogólnych</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- JDG RESULTS -->
+  <div class="card">
+    <div class="card-head" style="border-color:#A7F3D0">
+      <div class="card-icon" style="background:var(--j-light)">📊</div>
+      <div><div class="card-title text-j">Wynik — JDG</div><div class="card-sub">Miesięczne podsumowanie</div></div>
+    </div>
+    <div class="card-body">
+      <div class="r-row"><span class="r-label">Przychód z faktury</span><span class="r-val neutral" id="j-rev">—</span></div>
+      <div class="r-row"><span class="r-label">Koszty uzysk. przychodu (faktury)</span><span class="r-val neg" id="j-costs">—</span></div>
+      <div class="r-row"><span class="r-label">ZUS składki społeczne</span><span class="r-val neg" id="j-zus">—</span></div>
+      <div class="r-row bold"><span class="r-label bold">Dochód (podstawa zdrowotnej)</span><span class="r-val neutral" id="j-income">—</span></div>
+      <hr class="r-divider">
+      <div class="r-row"><span class="r-label">Składka zdrowotna (9% dochodu)</span><span class="r-val neg" id="j-health">—</span></div>
+      <div class="r-row"><span class="r-label">Podstawa opodatkowania</span><span class="r-val neutral" id="j-taxbase">—</span></div>
+      <div class="r-row"><span class="r-label">Podatek dochodowy (zaliczka)</span><span class="r-val neg" id="j-tax">—</span></div>
+      <hr class="r-divider">
+      <div class="r-row"><span class="r-label bold">Efektywna stopa podatkowa (podatek)</span><span class="r-val neutral" id="j-effpct">—</span></div>
+
+      <div class="result-box j-box">
+        <div class="amount" id="j-takehome">—</div>
+        <div class="rlabel">💰 Na rękę miesięcznie</div>
+        <div class="eff-rate text-j" id="j-effrate">—</div>
+      </div>
+
+      <div class="annual-panel" id="j-annual">
+        <div class="section-title">📅 Rocznie (×12)</div>
+        <div class="annual-row"><span>Przychód brutto (faktury)</span><span id="ja-rev">—</span></div>
+        <div class="annual-row"><span>Koszty (×12)</span><span id="ja-costs">—</span></div>
+        <div class="annual-row"><span>ZUS społeczny (×12)</span><span id="ja-zus">—</span></div>
+        <div class="annual-row"><span>Składka zdrowotna (×12)</span><span id="ja-health">—</span></div>
+        <div class="annual-row"><span>Podatek dochodowy (roczny)</span><span id="ja-tax">—</span></div>
+        <div class="annual-total"><span>💰 Na rękę rocznie</span><span class="text-j" id="ja-takehome">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ COMPARISON ═══════════════ -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-head">
+    <div class="card-icon" style="background:#FFF7ED">⚖️</div>
+    <div><div class="card-title">Porównanie — Useme vs JDG</div><div class="card-sub">Które wynagrodzenie bardziej się opłaca?</div></div>
+  </div>
+  <div class="card-body">
+
+    <div class="winner" id="winner">
+      <div class="winner-ico">🏆</div>
+      <div>
+        <h3 id="w-title">Obliczam...</h3>
+        <p id="w-desc">Wprowadź dane powyżej</p>
+      </div>
+    </div>
+
+    <div class="cmp-grid">
+      <div class="cmp-col">
+        <div class="cmp-name"><span class="text-u">🟣 Useme</span><span style="font-size:.75rem;color:var(--muted)" id="c-u-pct"></span></div>
+        <div class="bar-bg"><div class="bar-fill" id="c-u-bar" style="background:var(--u);width:50%"></div></div>
+        <div class="cmp-amount text-u" id="c-u-amt">—</div>
+      </div>
+      <div class="cmp-col">
+        <div class="cmp-name"><span class="text-j">🟢 JDG</span><span style="font-size:.75rem;color:var(--muted)" id="c-j-pct"></span></div>
+        <div class="bar-bg"><div class="bar-fill" id="c-j-bar" style="background:var(--j);width:50%"></div></div>
+        <div class="cmp-amount text-j" id="c-j-amt">—</div>
+      </div>
+    </div>
+
+    <table class="cmp-table" style="margin-top:16px">
+      <thead>
+        <tr>
+          <th>Kategoria</th>
+          <th class="u-col">🟣 Useme</th>
+          <th class="j-col">🟢 JDG</th>
+          <th class="d-col">Różnica</th>
+        </tr>
+      </thead>
+      <tbody id="cmp-tbody"></tbody>
+    </table>
+
+    <div class="info" style="margin-top:16px;background:#FFF7ED;border-color:#FDE68A;color:#92400E">
+      <strong>⚠️ Ważne różnice poza kwotą "na rękę"</strong>
+      <b>Useme Standard:</b> Brak ubezpieczenia zdrowotnego (NFZ) i społecznego — musisz mieć inne źródło ubezpieczenia (np. umowa o pracę, ubezpieczenie rodzinne). &nbsp;
+      <b>Useme Plus:</b> Zawiera pełne ubezpieczenie NFZ w cenie 599 PLN. &nbsp;
+      <b>JDG:</b> Zawiera emeryturę, rentę, zdrowie, ewentualnie chorobowe. Budujesz staż i świadczenia emerytalne.
+    </div>
+  </div>
+</div>
+
+<!-- NOTES -->
+<div class="card">
+  <div class="card-head">
+    <div class="card-icon" style="background:#F0FDF4">📝</div>
+    <div><div class="card-title">Źródła i zastrzeżenia</div></div>
+  </div>
+  <div class="card-body" style="font-size:.78rem;color:var(--muted);line-height:1.8">
+    <p>• <b>ZUS 2026</b>: Podstawa wymiaru składek 5 652 PLN (60% × 9 420 PLN prognozowane przeciętne wynagrodzenie). Bez chorobowej: 1 788,29 PLN/mies., z chorobową: 1 926,76 PLN/mies. Źródło: <a href="https://www.zus.pl">zus.pl</a>, <a href="https://www.ifirma.pl/blog/skladki-zus-2026-ile-wynosza-aktualne-skladki-zus-dla-przedsiebiorcow/">ifirma.pl</a></p>
+    <p>• <b>Składka zdrowotna 2026</b>: min. 432,54 PLN (9% × 4 806 PLN — płaca minimalna 2026). Przy zasadach ogólnych: 9% dochodu, nie odliczana od podatku.</p>
+    <p>• <b>Useme Standard</b>: Prowizja 7,8% od wartości faktury, min. 29 PLN, max. 349 PLN/mies. Po limicie 349 PLN — bezpłatnie do końca miesiąca. Źródło: <a href="https://help.useme.com/ile-kosztuje-wystawienie-faktury-w-useme">help.useme.com</a></p>
+    <p>• <b>Useme Plus</b>: 599 PLN/mies. (pobierane z rozliczenia), następnie bezpłatne wystawianie faktur. Zawiera ubezpieczenie NFZ. Źródło: <a href="https://useme.com/pl/useme-plus/">useme.com/pl/useme-plus</a></p>
+    <p>• <b>50% KUP limit</b>: Kalkulator nie uwzględnia rocznego limitu 120 000 PLN dla 50% KUP. Przy wysokich zarobkach może mieć znaczenie.</p>
+    <p>• <b>VAT</b>: Kalkulator nie uwzględnia VAT (zakłada zwolnienie lub neutralność VAT).</p>
+    <p>• <b>Kalkulator ma charakter poglądowy</b> — nie zastępuje porady księgowego ani doradcy podatkowego.</p>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<footer>
+  Kalkulator Wynagrodzeń Freelancera 2026 · Polska · Tylko do celów poglądowych<br>
+  Dane ZUS: <a href="https://www.zus.pl">zus.pl</a> · Dane Useme: <a href="https://useme.com/pl/useme-plus/">useme.com</a> · Aktualizacja: marzec 2026
+</footer>
+
+<script>
+var usemePlan = 'standard';
+var showAnnual = false;
+
+function pln(v, digits) {
+  digits = digits === undefined ? 0 : digits;
+  return new Intl.NumberFormat('pl-PL',{style:'currency',currency:'PLN',minimumFractionDigits:digits,maximumFractionDigits:digits}).format(v);
+}
+
+function taxCalc(annualIncome, kwotaWolna) {
+  var taxable = Math.max(0, annualIncome - kwotaWolna);
+  if (taxable <= 0) return 0;
+  if (taxable <= 120000) return taxable * 0.12;
+  return 120000 * 0.12 + (taxable - 120000) * 0.32;
+}
+
+function g(id){ return document.getElementById(id); }
+function tv(id){ return parseFloat(g(id).value) || 0; }
+function set(id, val){ var e=g(id); if(e) e.textContent=val; }
+
+function setUsemePlan(p) {
+  usemePlan = p;
+  g('tab-std').className = 'plan-tab' + (p==='standard' ? ' active-u' : '');
+  g('tab-plus').className = 'plan-tab' + (p==='plus' ? ' active-u' : '');
+  if (p === 'plus') {
+    g('useme-info').innerHTML = '<strong>ℹ️ Useme Plus — 599 PLN/mies.</strong>Stała opłata 599 PLN jest pobierana z Twojego rozliczenia. Następnie możesz wystawiać faktury <strong>bez dodatkowych prowizji</strong> do końca miesiąca. <strong>Zawiera pełne ubezpieczenie NFZ</strong> — bez potrzeby osobnego opłacania zdrowotnego!';
+  } else {
+    g('useme-info').innerHTML = '<strong>ℹ️ Useme Standard</strong>Prowizja 7,8% od wartości faktury. Minimalna opłata: 29 zł, maksymalna: 349 zł/mies. Po przekroczeniu limitu 349 zł — pozostałe faktury w miesiącu <strong>bezpłatnie</strong>. Brak ZUS, brak ubezpieczenia zdrowotnego.';
+  }
+  calc();
+}
+
+function toggleAnnual() {
+  showAnnual = !showAnnual;
+  g('annualSw').className = 'sw' + (showAnnual ? ' on' : '');
+  g('u-annual').style.display = showAnnual ? 'block' : 'none';
+  g('j-annual').style.display = showAnnual ? 'block' : 'none';
+  calc();
+}
+
+function toggleChorobowa() {
+  g('z-ch-row').style.display = g('z-ch').checked ? 'block' : 'none';
+  calc();
+}
+
+function calc() {
+  var gross = tv('gross');
+  var kw = tv('kwotaWolna');
+
+  /* ─── USEME ─── */
+  var uFee, uSub = 0;
+  if (usemePlan === 'plus') {
+    uFee = 599;
+    uSub = 599;
+  } else {
+    var raw = gross * 0.078;
+    uFee = Math.min(349, Math.max(29, raw));
+    // If gross < ~372 the min 29 applies; if gross > ~4474 the max 349 applies
+  }
+  var uNet = gross - uFee;
+  var uKup = uNet * 0.5;
+  var uTaxBase = uNet - uKup;
+  var uAnnualTax = taxCalc(uTaxBase * 12, kw);
+  var uMonthTax = uAnnualTax / 12;
+  var uTakeHome = uNet - uMonthTax;
+
+  set('u-gross', pln(gross));
+  set('u-fee', '-' + pln(uFee));
+  set('u-net', pln(uNet));
+  set('u-kup', '-' + pln(uKup));
+  set('u-taxbase', pln(uTaxBase));
+  set('u-tax', '-' + pln(uMonthTax));
+  set('u-takehome', pln(uTakeHome));
+  var uEff = gross > 0 ? (uTakeHome/gross*100).toFixed(1) : 0;
+  set('u-effrate', uEff + '% kwoty brutto na rękę');
+
+  if (showAnnual) {
+    set('ua-gross', pln(gross*12));
+    set('ua-fee', '-' + pln(uFee*12));
+    set('ua-taxbase', pln(uTaxBase*12));
+    set('ua-tax', '-' + pln(uAnnualTax));
+    set('ua-takehome', pln(uTakeHome*12));
+  }
+
+  /* ─── JDG ─── */
+  var costs = tv('c1')+tv('c2')+tv('c3')+tv('c4');
+  set('j-costs-total', pln(costs));
+
+  var zTotal = tv('z-em')+tv('z-re')+tv('z-wy')+tv('z-fp')
+             + (g('z-ch').checked ? tv('z-cho') : 0);
+  set('j-zus-total', '-' + pln(zTotal, 2));
+
+  var jIncome = Math.max(0, gross - costs - zTotal);
+  var jHealth = Math.max(432.54, jIncome * 0.09);
+  var jTaxBase = jIncome; // zasady ogólne: no zdrowotna deduction
+  var jAnnualTax = taxCalc(jTaxBase * 12, kw);
+  var jMonthTax = jAnnualTax / 12;
+  var jTakeHome = gross - costs - zTotal - jHealth - jMonthTax;
+  var jEffPct = jIncome > 0 ? (jMonthTax / jIncome * 100).toFixed(1) : '0.0';
+
+  set('j-rev', pln(gross));
+  set('j-costs', '-' + pln(costs));
+  set('j-zus', '-' + pln(zTotal, 2));
+  set('j-income', pln(jIncome));
+  set('j-health', '-' + pln(jHealth, 2));
+  set('j-taxbase', pln(jTaxBase));
+  set('j-tax', '-' + pln(jMonthTax));
+  set('j-effpct', jEffPct + '% dochodu');
+  set('j-takehome', pln(jTakeHome));
+  var jEff = gross > 0 ? (jTakeHome/gross*100).toFixed(1) : 0;
+  set('j-effrate', jEff + '% kwoty brutto na rękę');
+
+  if (showAnnual) {
+    set('ja-rev', pln(gross*12));
+    set('ja-costs', '-' + pln(costs*12));
+    set('ja-zus', '-' + pln(zTotal*12, 2));
+    set('ja-health', '-' + pln(jHealth*12, 2));
+    set('ja-tax', '-' + pln(jAnnualTax));
+    set('ja-takehome', pln(jTakeHome*12));
+  }
+
+  /* ─── COMPARISON ─── */
+  var maxV = Math.max(uTakeHome, jTakeHome, 1);
+  var minV = Math.min(uTakeHome, jTakeHome);
+  g('c-u-bar').style.width = Math.max(5, uTakeHome/maxV*100) + '%';
+  g('c-j-bar').style.width = Math.max(5, jTakeHome/maxV*100) + '%';
+  set('c-u-amt', pln(uTakeHome));
+  set('c-j-amt', pln(jTakeHome));
+  set('c-u-pct', (gross>0?(uTakeHome/gross*100).toFixed(1):0) + '% z faktury');
+  set('c-j-pct', (gross>0?(jTakeHome/gross*100).toFixed(1):0) + '% z faktury');
+
+  var diff = uTakeHome - jTakeHome;
+  var wb = g('winner');
+  if (Math.abs(diff) < 5) {
+    g('w-title').textContent = '🤝 Wyniki praktycznie identyczne!';
+    g('w-desc').textContent = 'Różnica wynosi mniej niż 5 PLN miesięcznie';
+    wb.style.background = 'linear-gradient(135deg,#F0FDF4,#D1FAE5)'; wb.style.borderColor='#10B981';
+  } else if (diff > 0) {
+    g('w-title').textContent = '🏆 Useme lepsze o ' + pln(Math.abs(diff)) + '/mies.';
+    g('w-desc').textContent = 'Rocznie to ' + pln(Math.abs(diff)*12) + ' więcej na korzyść Useme (bez ZUS, bez ubezpieczenia zdrow.)';
+    wb.style.background = 'linear-gradient(135deg,#F5F3FF,#EEF2FF)'; wb.style.borderColor='#6366F1';
+  } else {
+    g('w-title').textContent = '🏆 JDG lepsze o ' + pln(Math.abs(diff)) + '/mies.';
+    g('w-desc').textContent = 'Rocznie to ' + pln(Math.abs(diff)*12) + ' więcej na korzyść JDG (zawiera ubezpieczenie, emeryturę)';
+    wb.style.background = 'linear-gradient(135deg,#ECFDF5,#D1FAE5)'; wb.style.borderColor='#10B981';
+  }
+
+  // Comparison table
+  var rows = [
+    ['Faktura (brutto od klienta)', gross, gross, false],
+    ['Prowizja / opłata platformy', uFee, 0, true],
+    ['Koszty uzysk. przychodu', uKup, costs, true],
+    ['ZUS społeczny', 0, zTotal, true],
+    ['Składka zdrowotna', 0, jHealth, true],
+    ['Podatek dochodowy (mies.)', uMonthTax, jMonthTax, true],
+    ['ŁĄCZNIE ODLICZENIA', (uFee + uKup + uMonthTax), (costs + zTotal + jHealth + jMonthTax), true],
+    ['💰 NA RĘKĘ', uTakeHome, jTakeHome, false],
+    ['% z kwoty brutto', uEff, jEff, false, true],
+  ];
+  var tbody = g('cmp-tbody');
+  tbody.innerHTML = rows.map(function(r) {
+    var lbl=r[0], uV=r[1], jV=r[2], isExp=r[3], isPct=r[4]||false;
+    var isBold = lbl.includes('NA RĘKĘ') || lbl.includes('ŁĄCZNIE');
+    var d = uV - jV;
+    var dStr, dClr;
+    if (Math.abs(d) < 0.5) { dStr='—'; dClr='' }
+    else {
+      var sign = d>0?'+':'';
+      dStr = sign + (isPct ? d.toFixed(1)+'%' : pln(d));
+      dClr = isExp ? (d<0?'color:var(--j)':'color:var(--red)') : (d>0?'color:var(--j)':'color:var(--red)');
+    }
+    return '<tr'+(isBold?' class="highlight"':'')+'><td>'+lbl+'</td>'
+      +'<td class="u-col">'+(isPct?uV.toFixed(1)+'%':pln(uV))+'</td>'
+      +'<td class="j-col">'+(isPct?jV.toFixed(1)+'%':pln(jV))+'</td>'
+      +'<td class="d-col" style="'+dClr+'">'+dStr+'</td></tr>';
+  }).join('');
+}
+
+// Init
+calc();
+</script>
+</body>
+</html>
